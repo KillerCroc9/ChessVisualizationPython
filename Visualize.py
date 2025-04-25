@@ -5,11 +5,41 @@ import time
 
 pygame.init()
 
-SCREEN_WIDTH, SCREEN_HEIGHT = 1400, 800
-GRID_ROWS, GRID_COLS = 3, 3
+PIECE_IMAGES = {
+    'r': pygame.image.load("PNG/ROCK BLACK.png"),
+    'n': pygame.image.load("PNG/KNIGHT BLACK.png"),
+    'b': pygame.image.load("PNG/BISHOP BLACK.png"),
+    'q': pygame.image.load("PNG/QUEEN BLACK.png"),
+    'k': pygame.image.load("PNG/KING BLACK.png"),
+    'p': pygame.image.load("PNG/PAWN BLACK.png"),
+    'R': pygame.image.load("PNG/ROCK WHITE.png"),
+    'N': pygame.image.load("PNG/KNIGHT WHITE.png"),
+    'B': pygame.image.load("PNG/BISHOP WHITE.png"),
+    'Q': pygame.image.load("PNG/QUEEN WHITE.png"),
+    'K': pygame.image.load("PNG/KING WHITE.png"),
+    'P': pygame.image.load("PNG/PAWN WHITE.png"),
+}
+
+infoObject = pygame.display.Info()
+SCREEN_WIDTH, SCREEN_HEIGHT = infoObject.current_w, infoObject.current_h
+WINDOW = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT), pygame.FULLSCREEN)
+
+GRID_ROWS = 3
+GRID_COLS = 5
+
+# Calculate cell width and height based on the screen size and grid dimensions
 CELL_WIDTH = SCREEN_WIDTH // GRID_COLS
 CELL_HEIGHT = SCREEN_HEIGHT // GRID_ROWS
 
+# Force square cell (use the smaller dimension)
+SQUARE_SIZE = min(CELL_WIDTH, CELL_HEIGHT)
+
+# Calculate margins to center the grid
+x_margin = (SCREEN_WIDTH - (SQUARE_SIZE * GRID_COLS)) // 2
+y_margin = (SCREEN_HEIGHT - (SQUARE_SIZE * GRID_ROWS)) // 2
+
+# Force square cell (use the smaller dimension)
+SQUARE_SIZE = min(CELL_WIDTH, CELL_HEIGHT)
 BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
 GRAY = (169, 169, 169)
@@ -34,32 +64,37 @@ def load_all_games():
                 print(f"Error with file {filename}: {e}")
     return games
 
-# Draw a single board
 def visualize_board(surface, board_2d, x_offset, y_offset):
-    piece_colors = {
-        'r': BLACK, 'n': BLACK, 'b': BLACK, 'q': BLACK, 'k': BLACK, 'p': BLACK,
-        'R': WHITE, 'N': WHITE, 'B': WHITE, 'Q': WHITE, 'K': WHITE, 'P': WHITE,
-        '.': GRAY
-    }
-    font = pygame.font.SysFont("Arial", min(CELL_WIDTH, CELL_HEIGHT) // 8)
+    square_width = CELL_WIDTH // 8
+    square_height = CELL_HEIGHT // 8
+    scale_factor = 0.9  # 90% of the square size
 
     for i, row in enumerate(board_2d):
         for j, piece in enumerate(row):
-            rect_color = BLACK if piece.islower() else WHITE if piece.isupper() else GRAY
-            pygame.draw.rect(surface, rect_color,
-                             (x_offset + j * (CELL_WIDTH // 8), y_offset + i * (CELL_HEIGHT // 8),
-                              CELL_WIDTH // 8, CELL_HEIGHT // 8))
+            square_x = x_offset + j * square_width
+            square_y = y_offset + i * square_height
+
+            # Alternate square color for checkerboard pattern
+            color = WHITE if (i + j) % 2 == 0 else GRAY
+            pygame.draw.rect(surface, color, (square_x, square_y, square_width, square_height))
+
             if piece != '.':
-                text = font.render(piece.lower(), True, "Red")
-                text_rect = text.get_rect(center=(x_offset + j * (CELL_WIDTH // 8) + CELL_WIDTH // 16,
-                                                  y_offset + i * (CELL_HEIGHT // 8) + CELL_HEIGHT // 16))
-                surface.blit(text, text_rect)
+                img = PIECE_IMAGES.get(piece)
+                if img:
+                    new_width = int(square_width * scale_factor)
+                    new_height = int(square_height * scale_factor)
+                    img_scaled = pygame.transform.scale(img, (new_width, new_height))
 
-    pygame.draw.rect(surface, BLUE, (x_offset, y_offset, CELL_WIDTH, CELL_HEIGHT), 5)
+                    # Center the image within the square
+                    img_x = square_x + (square_width - new_width) // 2
+                    img_y = square_y + (square_height - new_height) // 2
+                    surface.blit(img_scaled, (img_x, img_y))
 
-# Show 9 games on screen
+    pygame.draw.rect(surface, BLACK, (x_offset, y_offset, CELL_WIDTH, CELL_HEIGHT), 1)
+
+# Show 15 games on screen
 def display_matches(games, match_start_idx, move_index):
-    match_limit = 9
+    match_limit = 15
     match_count = 0
     game_idx = match_start_idx
 
@@ -110,12 +145,6 @@ def main():
         return max(len(game) for game in current_games)
 
     while running:
-        # Draw the grid once at the beginning (or when necessary)
-        for row in range(GRID_ROWS):
-            for col in range(GRID_COLS):
-                x_offset = col * CELL_WIDTH
-                y_offset = row * CELL_HEIGHT
-                pygame.draw.rect(WINDOW, BLUE, (x_offset, y_offset, CELL_WIDTH, CELL_HEIGHT), 5)
 
         # Display the current board states
         display_matches(games, match_start_idx, move_index)
@@ -127,12 +156,12 @@ def main():
         # Move to the next game move after some duration
         if time.time() - last_move_time >= move_duration:
             move_index += 1
-            max_moves = get_max_moves_for_current_matches()  # Get max moves for the current 9 games
+            max_moves = get_max_moves_for_current_matches()  # Get max moves for the current 15 games
 
             # Check if all moves in the current game are finished
             if move_index >= max_moves:
                 move_index = 0  # Reset move index for the next batch of games
-                match_start_idx += 9  # Move to the next set of 9 games
+                match_start_idx += 15  # Move to the next set of 15 games
                 if match_start_idx >= len(games):
                     match_start_idx = 0  # Reset to start if we've reached the end of all games
 
