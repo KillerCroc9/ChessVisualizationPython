@@ -54,7 +54,7 @@ os.makedirs(output_folder, exist_ok=True)
 for filename in os.listdir(pgn_folder):
     if filename.endswith(".pgn"):
         pgn_path = os.path.join(pgn_folder, filename)
-        games = extract_all_games_from_pgn(pgn_path)
+        games = extract_all_games_from_pgn(pgn_path)[:1]  # Only take the first game
 
         for idx, game in enumerate(games):
             move_frames = convert_game_to_move_frames(game)

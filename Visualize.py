@@ -2,7 +2,7 @@ import json
 import os
 import pygame
 import time
-
+import random
 pygame.init()
 
 PIECE_IMAGES = {
@@ -43,7 +43,18 @@ SQUARE_SIZE = min(CELL_WIDTH, CELL_HEIGHT)
 BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
 GRAY = (169, 169, 169)
-BLUE = (0, 0, 255)
+
+
+# List of (LIGHT_SQUARE, DARK_SQUARE) color pairs
+CHESS_THEMES = [
+    ((240, 217, 181), (181, 136, 99)),    # Classic Beige
+    ((238, 238, 210), (118, 150, 86)),    # Pale Green
+    ((235, 236, 208), (119, 149, 186)),   # Steel Blue
+    ((200, 200, 200), (50, 50, 50)),      # Monochrome
+    ((170, 219, 255), (0, 102, 204)),     # Ocean
+    ((255, 228, 181), (139, 69, 19)),     # Autumn
+    ((255, 20, 147), (0, 0, 0))           # Cyberpunk
+]
 
 WINDOW = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 pygame.display.set_caption("Chess Matches Visualization")
@@ -64,10 +75,12 @@ def load_all_games():
                 print(f"Error with file {filename}: {e}")
     return games
 
+
 def visualize_board(surface, board_2d, x_offset, y_offset):
     square_width = CELL_WIDTH // 8
     square_height = CELL_HEIGHT // 8
     scale_factor = 0.9  # 90% of the square size
+    LIGHT_SQUARE, DARK_SQUARE = CHESS_THEMES[5]  
 
     for i, row in enumerate(board_2d):
         for j, piece in enumerate(row):
@@ -75,7 +88,7 @@ def visualize_board(surface, board_2d, x_offset, y_offset):
             square_y = y_offset + i * square_height
 
             # Alternate square color for checkerboard pattern
-            color = WHITE if (i + j) % 2 == 0 else GRAY
+            color = LIGHT_SQUARE if (i + j) % 2 == 0 else DARK_SQUARE
             pygame.draw.rect(surface, color, (square_x, square_y, square_width, square_height))
 
             if piece != '.':
@@ -115,7 +128,7 @@ def display_matches(games, match_start_idx, move_index):
 
 def display_winners(games, match_start_idx):
     font = pygame.font.SysFont("Arial", 100, bold=True)  # Large font for the word "Finished"
-    text = font.render("Finished", True, "Red")
+    text = font.render("Blacked", True, "Red")
     
     # Get the center of the window
     text_rect = text.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2))
@@ -136,7 +149,7 @@ def main():
     games = load_all_games()
     match_start_idx = 0
     move_index = 0
-    move_duration = 0.05
+    move_duration = .02
     last_move_time = time.time()
 
     # Calculate move counts for only the current 9 games
